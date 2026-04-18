@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MORSEVIC // ACCESS RESTRICTED</title>
+    <title>MORSEVIC // MOBILE ACCESS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Share+Tech+Mono&display=swap');
@@ -16,131 +16,125 @@
         }
 
         body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            background-color: #000;
-            color: var(--terminal-green);
+            margin: 0; padding: 0; min-height: 100%;
+            background-color: #000; color: var(--terminal-green);
             font-family: 'Share Tech Mono', monospace;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
-        /* Loading & Terminal Styles */
+        /* --- LOADING TERMINAL --- */
         #terminal-screen {
-            position: fixed;
-            inset: 0;
-            background: #000;
-            padding: 20px;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
+            position: fixed; inset: 0; background: #000;
+            padding: 15px; z-index: 1000;
+            display: flex; flex-direction: column; overflow-y: auto;
+            font-size: 13px;
         }
 
-        .command-line {
-            margin-bottom: 5px;
-            opacity: 0;
-            animation: fadeIn 0.1s forwards;
-        }
-
+        .command-line { margin-bottom: 5px; opacity: 0; animation: fadeIn 0.1s forwards; }
         @keyframes fadeIn { to { opacity: 1; } }
 
-        /* Password Input Style */
+        /* --- PASSWORD GATE --- */
         #password-gate {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: #000;
-            z-index: 1001;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            display: none; position: fixed; inset: 0;
+            background: #000; z-index: 1001;
+            flex-direction: column; align-items: center; justify-content: center;
+            padding: 20px; text-align: center;
         }
 
         .input-box {
-            background: transparent;
-            border: none;
-            border-bottom: 2px solid var(--terminal-green);
-            color: var(--terminal-green);
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 24px;
-            text-align: center;
-            outline: none;
-            width: 300px;
-            margin-top: 20px;
-            letter-spacing: 5px;
+            background: transparent; border: none; border-bottom: 2px solid var(--terminal-green);
+            color: var(--terminal-green); font-family: 'Share Tech Mono', monospace;
+            font-size: 22px; text-align: center; outline: none;
+            width: 100%; max-width: 280px; margin-top: 25px; letter-spacing: 4px;
         }
 
-        /* Dossier UI (Hidden initially) */
+        /* --- MAIN APP LAYOUT (MOBILE FIRST) --- */
         #main-app {
-            display: none;
-            height: 100vh;
-            background-color: #111;
+            display: none; min-height: 100vh; background-color: #111;
+            flex-direction: column;
+        }
+
+        @media (min-width: 768px) {
+            #main-app { flex-direction: row; }
+        }
+
+        .sidebar-folder {
+            background: #2d2d2d; border-bottom: 2px solid #444;
+            flex-shrink: 0; z-index: 50; width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .sidebar-folder { width: 300px; border-bottom: none; border-right: 2px solid #444; }
         }
 
         .dossier-page {
             background-color: var(--paper-bg);
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-            position: relative;
             background-image: url('https://www.transparenttextures.com/patterns/paper.png');
             color: var(--ink-black);
             font-family: 'Special Elite', cursive;
+            flex-grow: 1; min-height: 100vh;
         }
 
-        .sidebar-folder {
-            background: #2d2d2d;
-            border-right: 2px solid #444;
+        /* Nav Tab Mobile: Scrollable Horizontal */
+        .nav-container {
+            display: flex; overflow-x: auto; white-space: nowrap;
+            scrollbar-width: none; -ms-overflow-style: none;
+        }
+        .nav-container::-webkit-scrollbar { display: none; }
+
+        @media (min-width: 768px) {
+            .nav-container { flex-direction: column; overflow-x: visible; }
         }
 
         .nav-tab {
-            transition: all 0.3s;
-            border-left: 4px solid transparent;
-            color: #999;
+            transition: all 0.3s; border-bottom: 4px solid transparent;
+            color: #999; padding: 15px 20px; font-size: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        @media (min-width: 768px) {
+            .nav-tab { border-bottom: none; border-left: 4px solid transparent; width: 100%; }
+            .nav-tab.active { border-left: 4px solid var(--re-red); border-bottom: none; }
         }
 
         .nav-tab.active {
-            background: #3d3d3d;
-            color: #fff;
-            border-left: 4px solid var(--re-red);
+            background: #3d3d3d; color: #fff; border-bottom: 4px solid var(--re-red);
         }
 
-        .stamp {
-            border: 4px double var(--re-red);
-            color: var(--re-red);
-            padding: 5px 15px;
-            text-transform: uppercase;
-            font-weight: bold;
-            display: inline-block;
-            transform: rotate(-5deg);
-        }
-
-        .photo-placeholder {
-            width: 120px; height: 140px;
-            background: #333; border: 4px solid #fff;
-            display: flex; align-items: center; justify-content: center;
-            position: relative; overflow: hidden;
-        }
-
+        /* --- MODAL DESIGN --- */
         #profile-modal {
             display: none; position: fixed; inset: 0;
-            background: rgba(0, 0, 0, 0.9); z-index: 2000;
-            align-items: center; justify-content: center; padding: 20px;
+            background: rgba(0, 0, 0, 0.95); z-index: 2000;
+            align-items: center; justify-content: center; padding: 15px;
         }
 
         .modal-paper {
-            background-color: var(--paper-bg); width: 100%; max-width: 900px;
-            max-height: 90vh; overflow-y: auto; padding: 40px;
+            background-color: var(--paper-bg); width: 100%; max-width: 750px;
+            max-height: 90vh; overflow-y: auto; padding: 25px;
             background-image: url('https://www.transparenttextures.com/patterns/paper.png');
-            box-shadow: 0 0 30px rgba(0,0,0,0.5); color: var(--ink-black);
+            box-shadow: 0 0 40px rgba(0,0,0,0.7); color: var(--ink-black);
             font-family: 'Special Elite', cursive;
+            position: relative;
+            border-radius: 4px;
         }
 
-        .error-msg { color: #ff0000; margin-top: 10px; display: none; }
-        
+        .stamp {
+            border: 3px double var(--re-red); color: var(--re-red);
+            padding: 4px 10px; text-transform: uppercase;
+            font-weight: bold; display: inline-block;
+            transform: rotate(-5deg); font-size: 11px;
+        }
+
+        .photo-box {
+            width: 120px; height: 150px; background: #ddd; border: 4px solid #fff;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.1); margin: 0 auto;
+        }
+
         .scanline {
-            width: 100%; height: 2px; background: rgba(0, 255, 65, 0.1);
+            width: 100%; height: 2px; background: rgba(0, 255, 65, 0.05);
             position: absolute; top: 0; left: 0; pointer-events: none;
-            animation: scan 4s linear infinite; z-index: 2001;
+            animation: scan 6s linear infinite; z-index: 2001;
         }
         @keyframes scan { from { top: 0; } to { top: 100%; } }
     </style>
@@ -153,41 +147,46 @@
     <!-- Password Gate -->
     <div id="password-gate">
         <div class="scanline"></div>
-        <p class="tracking-widest">[ SECURITY LEVEL: OMEGA ]</p>
-        <p class="mt-4">ENTER DECRYPTION KEY:</p>
+        <div class="mb-6">
+            <h2 class="text-xl tracking-widest text-red-600 font-bold underline">RESTRICTED ACCESS</h2>
+            <p class="text-[10px] mt-2 opacity-60">AUTHORIZED PERSONNEL ONLY</p>
+        </div>
+        <p class="mt-4 text-sm font-mono">ENCRYPTION KEY:</p>
         <input type="password" id="pass-input" class="input-box" autofocus autocomplete="off">
-        <p id="error-msg" class="error-msg">INVALID CREDENTIALS. SYSTEM LOCK IN PROGRESS...</p>
-        <p class="text-[10px] mt-20 opacity-40 italic">HINT: The Family Core Connection</p>
+        <p id="error-msg" class="text-red-600 mt-6 hidden text-xs">DECRYPTION FAILED. ACCESS DENIED.</p>
+        <div class="mt-16 opacity-20 text-[9px] uppercase tracking-widest">Morsevic Global Intelligence Network</div>
     </div>
 
-    <!-- Main App (Dossier) -->
-    <div id="main-app" class="flex flex-col md:flex-row min-h-screen">
-        <aside class="w-full md:w-72 sidebar-folder p-6 z-20 flex flex-col h-full font-mono">
-            <div class="mb-10">
+    <!-- Main App -->
+    <div id="main-app">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar-folder p-5 md:p-8 font-mono">
+            <div class="mb-5 md:mb-12">
                 <h1 class="text-white text-2xl font-bold tracking-tighter">MORSEVIC</h1>
-                <p class="text-red-500 text-xs tracking-[0.2em]">FILE NO. 09-RE-2024</p>
+                <div class="h-1 w-12 bg-red-700 mt-1"></div>
+                <p class="text-red-500 text-[10px] mt-2 tracking-[0.2em]">CLASSIFIED DOSSIER</p>
             </div>
-            <nav class="space-y-2 text-sm flex-grow overflow-y-auto">
-                <button onclick="loadSection('legacy')" id="btn-legacy" class="nav-tab active w-full text-left p-3 flex items-center gap-3">
-                    <span>[00]</span> MORSEVIC LEGACY
+            <nav class="nav-container">
+                <button onclick="loadSection('legacy')" id="btn-legacy" class="nav-tab active">
+                    <span class="opacity-50 text-[10px]">00</span> LEGACY
                 </button>
-                <div class="py-2 text-[10px] text-gray-500 uppercase tracking-widest pl-3">Investigation</div>
-                <button onclick="loadSection('bfi')" id="btn-bfi" class="nav-tab w-full text-left p-3 flex items-center gap-3">
-                    <span>[01]</span> B.F.I. FILES
+                <button onclick="loadSection('bfi')" id="btn-bfi" class="nav-tab">
+                    <span class="opacity-50 text-[10px]">01</span> B.F.I.
                 </button>
-                <button onclick="loadSection('hee')" id="btn-hee" class="nav-tab w-full text-left p-3 flex items-center gap-3">
-                    <span>[02]</span> H.E.E. SURVIVORS
+                <button onclick="loadSection('hee')" id="btn-hee" class="nav-tab">
+                    <span class="opacity-50 text-[10px]">02</span> H.E.E.
                 </button>
-                <button onclick="loadSection('core')" id="btn-core" class="nav-tab w-full text-left p-3 flex items-center gap-3">
-                    <span>[03]</span> C.O.R.E. EXECUTIVES
+                <button onclick="loadSection('core')" id="btn-core" class="nav-tab">
+                    <span class="opacity-50 text-[10px]">03</span> C.O.R.E.
                 </button>
-                <button onclick="loadSection('sin')" id="btn-sin" class="nav-tab w-full text-left p-3 flex items-center gap-3">
-                    <span>[04]</span> S.I.N. HOSTILES
+                <button onclick="loadSection('sin')" id="btn-sin" class="nav-tab">
+                    <span class="opacity-50 text-[10px]">04</span> S.I.N.
                 </button>
             </nav>
         </aside>
 
-        <main class="flex-1 dossier-page p-6 md:p-12 overflow-y-auto h-full">
+        <!-- Main Content -->
+        <main class="dossier-page p-5 md:p-16 overflow-y-auto">
             <div id="content-screen" class="max-w-4xl mx-auto opacity-0 transition-opacity duration-500 pb-20"></div>
         </main>
     </div>
@@ -198,21 +197,16 @@
     </div>
 
     <script>
-        // TERMINAL BOOT SEQUENCE
+        // --- BOOT SEQUENCE ---
         const terminal = document.getElementById('terminal-screen');
         const bootLogs = [
-            "Initializing MORSEVIC_OS v9.4...",
-            "Loading Kernel Modules...",
-            "Searching for encrypted nodes...",
-            "Node found at 127.0.0.1:09RE",
-            "Establishing secure handshake...",
-            "Bypassing civilian firewalls...",
-            "Accessing 'The Bloodline' Private Archives...",
-            "WARNING: Biological hazard data detected.",
-            "Loading dossier files...",
-            "Mapping genetic heritage data...",
-            "DONE.",
-            "ENCRYPTION KEY REQUIRED TO PROCEED."
+            "MORSEVIC_BOOT_V4.0 (MOBILE_ENABLED)...",
+            "Checking local decryption modules...",
+            "Loading responsive asset maps...",
+            "Decrypting node 127.0.0.1...",
+            "Establishing neural link...",
+            "READY.",
+            "PLEASE ENTER AUTHORIZATION CODE."
         ];
 
         let logIdx = 0;
@@ -223,7 +217,7 @@
                 line.textContent = `> ${bootLogs[logIdx]}`;
                 terminal.appendChild(line);
                 logIdx++;
-                setTimeout(typeLog, 150 + Math.random() * 200);
+                setTimeout(typeLog, 120 + Math.random() * 100);
             } else {
                 setTimeout(() => {
                     terminal.style.display = 'none';
@@ -233,94 +227,80 @@
             }
         }
 
-        // PASSWORD LOGIC
+        // --- PASSWORD LOGIC ---
         const passInput = document.getElementById('pass-input');
         passInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 if (passInput.value.toLowerCase() === 'bloodline') {
                     document.getElementById('password-gate').style.display = 'none';
-                    document.body.style.backgroundColor = '#111';
                     document.getElementById('main-app').style.display = 'flex';
                     loadSection('legacy');
                 } else {
-                    document.getElementById('error-msg').style.display = 'block';
+                    document.getElementById('error-msg').classList.remove('hidden');
                     passInput.value = '';
-                    setTimeout(() => { document.getElementById('error-msg').style.display = 'none'; }, 2000);
+                    setTimeout(() => { document.getElementById('error-msg').classList.add('hidden'); }, 2000);
                 }
             }
         });
 
-        // DATA DOSSIER
+        // --- DATA ---
         const sections = {
             legacy: {
-                title: "MORSEVIC FAMILY LEGACY",
-                subtitle: "The Bloodline's Original Sins",
+                title: "MORSEVIC LEGACY",
+                subtitle: "The Family Origin",
                 stamp: "TOP SECRET",
                 content: `
-                    <div class="prose max-w-none">
-                        <p class="mb-4 text-xl leading-relaxed italic">"This family is a disease. And we are merely the symptoms."</p>
-                        <p class="mb-6 leading-relaxed">
-                            More than just a corporation, Morsevic is an ancient dynasty obsessed with genetic purity. Following the explosion of incidents in their underground laboratories, factions began to form. Some seek to atone for ancestral sins (B.F.I & H.E.E), while others intend to harness the biological 'miracles' left behind (C.O.R.E & S.I.N).
-                        </p>
-                        <div class="bg-white/50 border-2 border-dashed border-gray-400 p-6 mb-8 relative">
-                            <h3 class="font-bold text-red-800 mb-2 underline">Current Faction Status:</h3>
-                            <ul class="list-disc pl-5 text-sm space-y-2">
-                                <li><strong>B.F.I:</strong> Rescuing H.E.E members from state-sanctioned disposal facilities.</li>
-                                <li><strong>H.E.E:</strong> Experiment victims fighting to remain 'human' after genetic tampering.</li>
-                                <li><strong>C.O.R.E:</strong> The suspicious corporate face maintaining legal assets.</li>
-                                <li><strong>S.I.N:</strong> The primary adversary. Operates in total shadow; invisible and lethal.</li>
-                            </ul>
+                    <div class="prose max-w-none text-sm md:text-base leading-relaxed">
+                        <p class="mb-4 font-bold text-red-900">"The blood of the family is the ink of history."</p>
+                        <p class="mb-6">The Morsevic Dynasty has controlled global biotechnology for decades. What started as a pharmaceutical empire evolved into a secret war between four powerful factions.</p>
+                        <div class="bg-black/5 border-2 border-black/10 p-5 rounded font-mono text-xs">
+                            <h3 class="font-bold mb-3 border-b border-black/20 pb-1">FACTION SUMMARY:</h3>
+                            <p class="mb-2"><strong>B.F.I:</strong> Federal hunters containing the outbreak.</p>
+                            <p class="mb-2"><strong>H.E.E:</strong> Survivors of the secret experiments.</p>
+                            <p class="mb-2"><strong>C.O.R.E:</strong> The corporate leadership hiding the truth.</p>
+                            <p><strong>S.I.N:</strong> Hostile shadow network seeking global infection.</p>
                         </div>
                     </div>
                 `
             },
             bfi: {
-                title: "BUREAU OF FEDERAL INVESTIGATION",
-                subtitle: "Rescue & Tactical Division",
+                title: "B.F.I. FILES",
+                subtitle: "Rescue & Containment",
                 stamp: "AUTHORIZED",
-                description: "The federal arm tasked with containing Morsevic bioweapon leaks and evacuating non-hostile subjects.",
+                description: "The primary response team assigned to stabilize the Morsevic fallout.",
                 members: [
-                    { name: "Elowen Vaire", nick: "Valkyrie", age: 34, gen: "Female", role: "Field Director", bio: "Former CIA operative who dedicated her life to erasing her family's dark legacy.", note: "Extremely wary of new recruits." },
-                    { name: "Noa Fern", nick: "Sledge", age: 29, gen: "Male", role: "Tactical Specialist", bio: "Close-quarters combat and explosives expert.", note: "Survivor of the early Raccoon City incidents." },
-                    { name: "Christabel Gwyneth", nick: "Oracle", age: 27, gen: "Female", role: "Investigator", bio: "Tech genius capable of tracking untraceable S.I.N frequencies.", note: "Never leaves the command terminal." },
-                    { name: "Abiorne Salnoure", nick: "Ironclad", age: 40, gen: "Male", role: "Weapons Expert", bio: "Military veteran specializing in anti-bioweapon ordnance.", note: "Left arm is a high-grade prosthetic." },
-                    { name: "Nilover Aster", nick: "Rookie", age: 22, gen: "NB", role: "Junior Agent", bio: "Top of the class graduate. Still traumatized by the sights at Delta Station.", note: "Status: 6-month probation." }
+                    { name: "Elowen Vaire", nick: "Valkyrie", age: 34, gen: "Female", role: "Field Director", bio: "Leading the purge of the family name.", note: "Priority Alpha target." },
+                    { name: "Noa Fern", nick: "Sledge", age: 29, gen: "Male", role: "Tactical Specialist", bio: "Breach expert and heavy weapon handler.", note: "Ex-S.A.T. operative." }
                 ]
             },
             hee: {
-                title: "HUMAN ENTITY EXPERIMENT",
-                subtitle: "Recovered Lab Survivors",
+                title: "H.E.E. SUBJECTS",
+                subtitle: "Human Entity Experiment",
                 stamp: "RECOVERED",
-                description: "Individuals rescued by the B.F.I from stasis tanks. Living proof of the Morsevic biological atrocities.",
+                description: "Survivors retrieved from the Delta Laboratory stasis tanks.",
                 members: [
-                    { name: "Maivelyn Lune", nick: "Phase-Zero", age: 31, gen: "Female", role: "Lead Geneticist", bio: "The first subject to successfully maintain human consciousness under high mutation stress.", note: "Blood displays a distinct bluish hue." },
-                    { name: "Estheric Lürn", nick: "Sentinel", age: 33, gen: "Male", role: "Containment Expert", bio: "Possesses biologically reinforced skin from 'Project Armor'.", note: "Resistant to small-caliber ballistic fire." },
-                    { name: "Mayla Lilou", nick: "Mirror", age: 25, gen: "Female", role: "Subject Handler", bio: "Acts as a bridge between the B.F.I and the more unstable survivors.", note: "Suffers from chronic childhood amnesia." },
-                    { name: "Nala Eulalie", nick: "Specter", age: 28, gen: "Female", role: "Biomaterials Analyst", bio: "Her body processes toxic materials into metabolic energy.", note: "Body temperature remains 5 degrees below normal." }
+                    { name: "Maivelyn Lune", nick: "Phase-Zero", age: 31, gen: "Female", role: "Lead Subject", bio: "A scientist who became her own experiment.", note: "Displays high regeneration." },
+                    { name: "Estheric Lürn", nick: "Sentinel", age: 33, gen: "Male", role: "Guard", bio: "Volunteer for the Armor Skin project.", note: "Skin is bullet-resistant." }
                 ]
             },
             core: {
-                title: "CENTRAL OPS & RESEARCH EXECUTIVE",
-                subtitle: "Asset & Corporate Management",
+                title: "C.O.R.E. EXEC",
+                subtitle: "Board of Directors",
                 stamp: "EXECUTIVE",
-                description: "The entity claiming legal ownership of Morsevic properties. Moves through legitimate legal channels.",
+                description: "The legal face of the Morsevic global holdings.",
                 members: [
-                    { name: "Caleb Dominic", nick: "Architect", age: 52, gen: "Male", role: "Executive Overseer", bio: "The mastermind behind the global network of specialized laboratories.", note: "Rarely seen without heavy private security." },
-                    { name: "Kenny Harris", nick: "Quartermaster", age: 48, gen: "Male", role: "Logistics Commander", bio: "Manages the global supply chain for the Morsevic biological reagents.", note: "Suspected of dark-web black market links." },
-                    { name: "Eliana Aisnith", nick: "Firewall", age: 36, gen: "Female", role: "Systems Architect", bio: "Designer of 'Morse-Net', the AI-driven security infrastructure.", note: "Zero tolerance for system anomalies." },
-                    { name: "Issa Meryche", nick: "Data Reaper", age: 30, gen: "Female", role: "Data Analyst", bio: "Tasked with digital sanitization of the Morsevic name.", note: "Former high-profile black-hat hacker." }
+                    { name: "Caleb Dominic", nick: "Architect", age: 52, gen: "Male", role: "CEO", bio: "Founder of the modern research hubs.", note: "Extremely well protected." },
+                    { name: "Kenny Harris", nick: "Quartermaster", age: 48, gen: "Male", role: "Logistics", bio: "Manages the global supply of bio-data.", note: "Possible traitor." }
                 ]
             },
             sin: {
-                title: "SHADOW INTELLIGENCE NETWORK",
-                subtitle: "Primary Global Threat",
+                title: "S.I.N. THREATS",
+                subtitle: "Shadow Intelligence",
                 stamp: "TERMINATE",
-                description: "Radical faction aiming for forced evolution via virus dissemination. The true invisible enemy.",
+                description: "Rogue elements pursuing the complete 'Bloodline' evolution.",
                 members: [
-                    { name: "Renée Corven", nick: "Matriarch", age: 45, gen: "Female", role: "Intel Chief", bio: "Leader of S.I.N. Believes she is the herald of the next human evolution.", note: "Priority Target for all Federal agencies." },
-                    { name: "Kansa Lalita", nick: "Ghost-Blade", age: 32, gen: "Male", role: "Assassination Specialist", bio: "Contract killer utilizing experimental thermal-stealth technology.", note: "Eyes replaced with multispectral optics." },
-                    { name: "Méisy Blythe", nick: "Siren", age: 26, gen: "Female", role: "Infiltration Expert", bio: "Utilizes vocal cord modifications to mimic any biometric signature.", note: "Responsible for the BFI-South base collapse." },
-                    { name: "Wyssie Rou", nick: "Silence", age: 24, gen: "Female", role: "Elimination Specialist", bio: "A living weapon that feels no fear, pain, or hesitation.", note: "Mental status: Fully desensitized." }
+                    { name: "Renée Corven", nick: "Matriarch", age: 45, gen: "Female", role: "Leader", bio: "Believes biological purity is the only way.", note: "Shoot on sight." },
+                    { name: "Kansa Lalita", nick: "Ghost-Blade", age: 32, gen: "Male", role: "Assassin", bio: "High-tech killer with optical camouflage.", note: "No thermal signature." }
                 ]
             }
         };
@@ -330,44 +310,40 @@
             const data = sections[id];
             document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
             document.getElementById(`btn-${id}`).classList.add('active');
+            
             screen.style.opacity = 0;
             setTimeout(() => {
                 let html = `
-                    <div class="flex flex-col md:flex-row justify-between items-start mb-10 border-b-4 border-gray-800 pb-6">
-                        <div>
-                            <span class="text-xs font-mono text-gray-500 tracking-[0.3em]">ENCRYPTED_DATA_NODE</span>
-                            <h2 class="text-4xl font-bold tracking-tight text-black mb-1 uppercase">${data.title}</h2>
-                            <h3 class="text-xl text-gray-600 font-mono italic">${data.subtitle}</h3>
+                    <div class="mb-8 border-b-2 border-black/20 pb-5">
+                        <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-4">
+                            <div>
+                                <h2 class="text-2xl md:text-4xl font-bold uppercase tracking-tight">${data.title}</h2>
+                                <h3 class="text-xs md:text-lg text-gray-500 font-mono italic mt-1">${data.subtitle}</h3>
+                            </div>
+                            <div class="stamp self-start">${data.stamp}</div>
                         </div>
-                        <div class="stamp">${data.stamp}</div>
                     </div>
                 `;
-                if (id === 'legacy') { html += data.content; } 
-                else {
+
+                if (id === 'legacy') { 
+                    html += data.content; 
+                } else {
                     html += `
-                        <p class="mb-8 leading-relaxed border-l-4 border-red-800 pl-4 italic text-gray-700">${data.description}</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <p class="text-sm italic mb-8 border-l-4 border-red-800 pl-4 bg-red-800/5 py-2">${data.description}</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             ${data.members.map((m, index) => `
-                                <div onclick="openProfile('${id}', ${index})" class="bg-white p-4 border border-gray-300 shadow-sm flex gap-4 hover:rotate-1 transition-all cursor-pointer group">
+                                <div onclick="openProfile('${id}', ${index})" class="bg-white p-4 border border-black/10 shadow-sm flex items-center gap-4 cursor-pointer hover:bg-gray-50 active:scale-[0.98] transition-all">
                                     <div class="flex-shrink-0">
-                                        <div class="photo-placeholder">
-                                            <span class="text-[8px] absolute top-1 left-1 opacity-50">#FILE_${index}</span>
-                                            <span class="text-2xl opacity-20 group-hover:opacity-40">👤</span>
-                                        </div>
-                                        <div class="mt-2 text-center">
-                                            <span class="text-[10px] font-mono bg-black text-white px-2 py-0.5 uppercase">"${m.nick}"</span>
+                                        <div class="photo-box !w-16 !h-20 md:!w-24 md:!h-28">
+                                            <span class="text-2xl opacity-10">👤</span>
                                         </div>
                                     </div>
-                                    <div class="flex-grow font-mono text-xs flex flex-col justify-between py-1">
-                                        <div>
-                                            <div class="text-lg font-bold font-sans border-b border-gray-200 mb-2 pb-1 group-hover:text-red-800">${m.name}</div>
-                                            <div class="grid grid-cols-2 gap-y-1">
-                                                <span class="text-gray-500 uppercase">AGE:</span> <span>${m.age}</span>
-                                                <span class="text-gray-500 uppercase">GENDER:</span> <span>${m.gen}</span>
-                                                <span class="text-gray-500 uppercase">ROLE:</span> <span>${m.role}</span>
-                                            </div>
+                                    <div class="flex-grow font-mono text-[10px] md:text-xs">
+                                        <div class="text-base md:text-xl font-bold font-sans text-red-900">${m.name}</div>
+                                        <div class="mt-1 flex gap-2">
+                                            <span class="bg-black text-white px-1.5 py-0.5 uppercase">"${m.nick}"</span>
                                         </div>
-                                        <div class="mt-2 text-[8px] text-blue-800 italic uppercase">Click to decrypt full dossier</div>
+                                        <div class="mt-2 opacity-60">ROLE: ${m.role}</div>
                                     </div>
                                 </div>
                             `).join('')}
@@ -375,45 +351,50 @@
                 }
                 screen.innerHTML = html;
                 screen.style.opacity = 1;
-            }, 300);
+            }, 250);
         }
 
         function openProfile(sectionId, memberIdx) {
             const member = sections[sectionId].members[memberIdx];
             const modal = document.getElementById('profile-modal');
             const modalContent = document.getElementById('modal-content');
+            
             modalContent.innerHTML = `
-                <div class="flex flex-col md:flex-row gap-10">
-                    <div class="w-full md:w-1/3 border-r border-gray-300 pr-0 md:pr-10">
-                        <div class="photo-placeholder mx-auto mb-6 !w-48 !h-56 bg-gray-200 border-8 border-white shadow-xl">
-                             <span class="text-4xl opacity-10">👤</span>
+                <button onclick="closeModalDirect()" class="absolute top-4 right-4 bg-red-900 text-white w-10 h-10 flex items-center justify-center font-sans font-bold shadow-lg">X</button>
+                <div class="flex flex-col md:flex-row gap-8">
+                    <div class="w-full md:w-1/3 text-center md:border-r border-black/10 md:pr-8">
+                        <div class="photo-box !w-32 !h-40 mb-4 bg-white">
+                             <span class="text-5xl opacity-5">👤</span>
                         </div>
-                        <div class="text-center mb-10">
-                            <h2 class="text-2xl font-bold font-sans">${member.name}</h2>
-                            <p class="text-red-800 font-mono text-xl font-bold mt-2 uppercase">"${member.nick}"</p>
-                        </div>
-                        <div class="space-y-2 font-mono text-[12px] border-t border-gray-400 pt-4">
-                            <div class="flex justify-between"><span>AGE:</span><span>${member.age}</span></div>
-                            <div class="flex justify-between"><span>GENDER:</span><span>${member.gen}</span></div>
-                            <div class="flex justify-between"><span>ACCESS LEVEL:</span><span class="text-red-600">CONFIDENTIAL</span></div>
+                        <h2 class="text-2xl font-bold font-sans mb-1">${member.name}</h2>
+                        <div class="bg-red-900 text-white inline-block px-3 py-1 font-mono text-sm font-bold mb-4 uppercase">"${member.nick}"</div>
+                        <div class="text-[11px] font-mono text-left space-y-2 border-t border-black/10 pt-4">
+                            <div class="flex justify-between"><span class="opacity-50">AGE:</span><span>${member.age}</span></div>
+                            <div class="flex justify-between"><span class="opacity-50">GENDER:</span><span>${member.gen}</span></div>
+                            <div class="flex justify-between"><span class="opacity-50">ROLE:</span><span>${member.role}</span></div>
                         </div>
                     </div>
-                    <div class="w-full md:w-2/3 relative">
-                        <button onclick="document.getElementById('profile-modal').style.display='none'" class="absolute -top-6 -right-6 text-xl bg-black text-white w-8 h-8 hover:bg-red-800">X</button>
-                        <div class="stamp mb-4 text-sm">${sections[sectionId].stamp} DOCUMENT</div>
-                        <h3 class="text-lg font-bold border-b-2 border-black pb-1 mb-3 uppercase">CLASSIFIED BIOGRAPHY</h3>
-                        <p class="leading-relaxed mb-6 text-sm font-sans">${member.bio}</p>
-                        <h3 class="text-lg font-bold border-b-2 border-black pb-1 mb-3 uppercase">FIELD OBSERVATIONS</h3>
-                        <div class="p-4 bg-gray-100 border-l-8 border-gray-800 font-mono text-xs italic">"${member.note}"</div>
-                        <div class="mt-8 opacity-20 text-[8px] uppercase">Property of Morsevic Dynasty. Unauthorized redistribution is treason.</div>
+                    <div class="w-full md:w-2/3">
+                        <div class="stamp mb-4 text-[10px]">${sections[sectionId].stamp} FILE</div>
+                        <h3 class="text-sm font-bold border-b border-black pb-1 mb-3 uppercase">BACKGROUND</h3>
+                        <p class="text-xs md:text-sm font-sans mb-6 leading-relaxed">${member.bio}</p>
+                        <h3 class="text-sm font-bold border-b border-black pb-1 mb-3 uppercase">SUPERVISOR NOTES</h3>
+                        <div class="p-4 bg-red-900/5 border-l-4 border-red-900 font-mono text-[10px] italic">"${member.note}"</div>
+                        <div class="mt-10 opacity-10 text-[8px] uppercase font-mono">End of File. Property of Morsevic Group.</div>
                     </div>
                 </div>`;
+            
             modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
         }
 
-        function closeModal(e) { document.getElementById('profile-modal').style.display = 'none'; }
+        function closeModalDirect() {
+            document.getElementById('profile-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
 
-        // Start Boot Sequence
+        function closeModal(e) { if(e.target.id === 'profile-modal') closeModalDirect(); }
+
         window.onload = typeLog;
     </script>
 </body>
