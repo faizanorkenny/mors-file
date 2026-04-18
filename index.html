@@ -288,7 +288,7 @@
                 stamp: "BOARD",
                 desc: "Executive board controlling global funding and research logistics.",
                 members: [
-                    { name: "Kenny Harris", nick: "Architect", role: "CEO", bio: "The mind behind modern research. Possesses original Morsevic pure-data.", note: "Location unknown. Communicates via encrypted proxy only." },
+                    { name: "Kenny Harris", img: "img/architect.png", nick: "Architect", role: "CEO", bio: "The mind behind modern research. Possesses original Morsevic pure-data.", note: "Location unknown. Communicates via encrypted proxy only." },
                     { name: "Caleb Dominic", nick: "Quartermaster", role: "Logistics Chief", bio: "Manages the global distribution of serum and weaponry.", note: "Has knowledge of every black-market route in the hemisphere." },
                     { name: "Eliana Aisnith", nick: "Legal Counsel", role: "The Fixer", bio: "Handles international treaty violations and corporate sanitization.", note: "Expert in mass-media manipulation." },
                     { name: "Issa Meryche", nick: "Science Lead", role: "Director of R&D", bio: "Oversees the current H.E.E. generation modification programs.", note: "Ambitious. Disregards all ethical boundaries." }
@@ -331,9 +331,14 @@
                     html += `<p class="text-[11px] mb-8 border-l-4 border-red-800 pl-4 py-1 uppercase opacity-70">${data.desc}</p>`;
                     html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">`;
                     data.members.forEach((m, idx) => {
+                        // Menentukan path gambar: prioritaskan properti .img, kalau tidak ada pakai nickname
+                        const imgPath = m.img ? m.img : `img/${m.nick.toLowerCase()}.png`;
+                        
                         html += `
                             <div class="member-card" onclick="openProfile('${id}', ${idx})">
-                                <div class="w-10 h-14 bg-gray-200 shrink-0 flex items-center justify-center text-lg opacity-20">👤</div>
+                                <div class="w-10 h-14 bg-gray-200 shrink-0 flex items-center justify-center overflow-hidden border border-black/10">
+                                    <img src="${imgPath}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='👤'">
+                                </div>
                                 <div class="overflow-hidden">
                                     <div class="text-red-900 font-bold text-sm uppercase truncate">${m.name}</div>
                                     <div class="text-[10px] bg-black/80 text-white inline-block px-1.5 mt-1">"${m.nick}"</div>
@@ -352,12 +357,15 @@
             const m = db[faksi].members[idx];
             const modal = document.getElementById('profile-modal');
             const content = document.getElementById('modal-content');
+            const imgPath = m.img ? m.img : `img/${m.nick.toLowerCase()}.png`;
 
             content.innerHTML = `
                 <div class="stamp mb-5">${db[faksi].stamp} // RECORD_ID_${idx + 400}</div>
                 <div class="flex flex-col gap-8">
                     <div class="text-center">
-                        <div class="w-28 h-36 bg-gray-300 mx-auto border-2 border-white shadow-md flex items-center justify-center text-3xl opacity-10 mb-5">👤</div>
+                        <div class="w-28 h-36 bg-gray-300 mx-auto border-2 border-white shadow-md overflow-hidden flex items-center justify-center mb-5">
+                            <img src="${imgPath}" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<span class=\'opacity-10 text-3xl\'>👤</span>'">
+                        </div>
                         <h2 class="text-3xl font-bold font-sans">${m.name}</h2>
                         <div class="bg-red-900 text-white px-4 py-1 inline-block mt-2 font-mono text-xs font-bold uppercase tracking-widest">"${m.nick}"</div>
                     </div>
