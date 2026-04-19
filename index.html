@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MORSEVIC // INTELLIGENCE SYSTEM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --paper-bg: #f2f0e9;
+            --ink-black: #1a1a1b;
+            --re-red: #8b0000;
+            --terminal-green: #00ff41;
+        }
+
+        body, html {
+            margin: 0; padding: 0; min-height: 100%;
+            background-color: #000;
+            font-family: 'Share Tech Mono', monospace;
+            overflow-x: hidden;
+        }
+
+        /* --- SCANLINE EFFECT (Login Screens Only) --- */
+        .scanline-overlay {
+            position: fixed; inset: 0;
+            background: linear-gradient(
+                to bottom,
+                transparent 50%,
+                rgba(0, 255, 65, 0.05) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .moving-line {
+            position: fixed; inset: 0;
+            width: 100%; height: 3px;
+            background: rgba(0, 255, 65, 0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+            z-index: 10000;
+            pointer-events: none;
+            animation: scanMove 4s linear infinite;
+        }
+
+        @keyframes scanMove {
+            0% { top: -10%; }
+            100% { top: 110%; }
+        }
+
+        /* --- TERMINAL & LOGIN UI --- */
+        #terminal-screen {
+            position: fixed; inset: 0; background: #000;
+            padding: 20px; z-index: 2000;
+            display: flex; flex-direction: column; overflow-y: auto;
+            color: var(--terminal-green);
+        }
+
+        .command-line { margin-bottom: 5px; opacity: 0; animation: fadeIn 0.1s forwards; font-size: 13px; }
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        #password-gate {
+            display: none; position: fixed; inset: 0;
+            background: #000; z-index: 1999;
+            flex-direction: column; align-items: center; justify-content: center;
+            padding: 20px; text-align: center;
+            color: var(--terminal-green);
+        }
+
+        .input-box {
+            background: transparent; border: none; border-bottom: 2px solid var(--terminal-green);
+            color: var(--terminal-green); font-family: 'Share Tech Mono', monospace;
+            font-size: 24px; text-align: center; outline: none;
+            width: 100%; max-width: 300px; margin-top: 30px; letter-spacing: 5px;
+        }
+
+        /* --- MAIN INTERFACE (Clean Dossier) --- */
+        #main-app {
+            display: none; min-height: 100vh; background-color: #111;
+            flex-direction: column;
+        }
+
+        @media (min-width: 768px) { #main-app { flex-direction: row; } }
+
+        .sidebar-folder {
+            background: #111; border-bottom: 1px solid #333;
+            flex-shrink: 0; z-index: 50; width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .sidebar-folder { width: 280px; border-bottom: none; border-right: 1px solid #333; height: 100vh; position: sticky; top: 0; }
+        }
+
+        .dossier-page {
+            background-color: var(--paper-bg);
+            background-image: url('https://www.transparenttextures.com/patterns/paper.png');
+            color: var(--ink-black);
+            font-family: 'Special Elite', cursive;
+            flex-grow: 1; min-height: 100vh; position: relative;
+        }
+
+        .nav-container { display: flex; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+        .nav-container::-webkit-scrollbar { display: none; }
+        @media (min-width: 768px) { .nav-container { flex-direction: column; } }
+
+        .nav-tab {
+            transition: all 0.2s; border-bottom: 3px solid transparent;
+            color: #777; padding: 16px 20px; font-size: 12px;
+            display: flex; align-items: center; gap: 8px; text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        @media (min-width: 768px) {
+            .nav-tab { border-bottom: none; border-left: 4px solid transparent; width: 100%; }
+            .nav-tab.active { border-left: 4px solid var(--re-red); background: #222; color: #fff; }
+        }
+        .nav-tab.active { color: #fff; border-bottom: 3px solid var(--re-red); background: #1a1a1a; }
+
+        .member-card {
+            background: white; border: 1px solid rgba(0,0,0,0.1);
+            padding: 12px; display: flex; align-items: center; gap: 12px;
+            cursor: pointer; box-shadow: 1px 1px 0px rgba(0,0,0,0.05);
+        }
+        .member-card:hover { background: #fdfdfd; transform: translateY(-1px); }
+
+        #profile-modal {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.9); z-index: 10000;
+            flex-direction: column; overflow-y: auto; padding: 15px;
+        }
+
+        .modal-paper {
+            background-color: var(--paper-bg); width: 100%; max-width: 550px;
+            margin: auto; padding: 30px;
+            background-image: url('https://www.transparenttextures.com/patterns/paper.png');
+            color: var(--ink-black); font-family: 'Special Elite', cursive;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+        }
+
+        .stamp {
+            border: 2px solid var(--re-red); color: var(--re-red);
+            padding: 2px 6px; text-transform: uppercase;
+            font-weight: bold; display: inline-block;
+            transform: rotate(-2deg); font-size: 10px; margin-bottom: 8px;
+        }
+
+        .close-btn {
+            position: fixed; top: 20px; right: 20px;
+            background: var(--re-red); color: white;
+            width: 40px; height: 40px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; z-index: 10001; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="visual-effects">
+        <div class="scanline-overlay"></div>
+        <div class="moving-line"></div>
+    </div>
+
+    <div id="terminal-screen"></div>
+
+    <div id="password-gate">
+        <h2 class="text-xl tracking-[0.4em] text-red-600 font-bold mb-1">SECURE ENCLAVE</h2>
+        <p class="text-[9px] opacity-50 mb-12 uppercase font-mono">NODE: MORSEVIC_INTEL_SYSTEM_V4</p>
+        <p class="text-xs font-mono text-green-500 mb-2">IDENTITY VERIFICATION REQUIRED:</p>
+        <input type="password" id="pass-input" class="input-box" autofocus autocomplete="off" placeholder="*********">
+
+<p class="text-[9px] text-gray-600 mt-4 font-mono leading-tight tracking-wider uppercase">
+    HINT: Trace the hereditary pathogen sequence. <br> 
+    The core synthesis lies within the <span class="text-gray-500 italic">"Sanguine Genealogy"</span>.
+</p>
+
+<p id="error-msg" class="text-red-700 mt-6 hidden text-[10px] font-mono font-bold">ACCESS DENIED: INVALID PASSWORD BOS</p>
+    </div>
+
+    <div id="main-app">
+        <aside class="sidebar-folder p-6 md:p-8 font-mono">
+            <div class="mb-8 md:mb-12">
+                <h1 class="text-white text-2xl font-bold tracking-tighter">MORSEVIC</h1>
+                <div class="h-1 w-10 bg-red-700 mt-1"></div>
+                <p class="text-red-500 text-[9px] mt-2 tracking-[0.1em] uppercase">Confidential Intelligence v.4.0</p>
+            </div>
+            <nav class="nav-container">
+                <button onclick="loadSection('legacy')" id="btn-legacy" class="nav-tab active">GENESIS</button>
+                <button onclick="loadSection('bfi')" id="btn-bfi" class="nav-tab">B.F.I.</button>
+                <button onclick="loadSection('hee')" id="btn-hee" class="nav-tab">H.E.E.</button>
+                <button onclick="loadSection('core')" id="btn-core" class="nav-tab">C.O.R.E.</button>
+                <button onclick="loadSection('sin')" id="btn-sin" class="nav-tab">S.I.N.</button>
+            </nav>
+        </aside>
+
+        <main class="dossier-page p-6 md:p-12 overflow-y-auto">
+            <div id="content-screen" class="max-w-4xl mx-auto opacity-0 transition-opacity duration-300 pb-20"></div>
+        </main>
+    </div>
+
+    <div id="profile-modal">
+        <div class="close-btn" onclick="closeModal()">✕</div>
+        <div class="modal-paper" id="modal-content"></div>
+    </div>
+
+    <script>
+        const terminal = document.getElementById('terminal-screen');
+        const logs = [
+            "INITIALIZING BOOT SEQUENCE...",
+            "LOADING ENCRYPTION PROTOCOLS...",
+            "ESTABLISHING SECURE HANDSHAKE...",
+            "QUERYING DATABASE: B.F.I., H.E.E., C.O.R.E., S.I.N.",
+            "REMOTE PACKETS RECEIVED.",
+            "CHALLENGE ISSUED. WAITING FOR ACCESS KEY..."
+        ];
+        
+        let i = 0;
+        function showLogs() {
+            if (i < logs.length) {
+                let div = document.createElement('div');
+                div.className = 'command-line';
+                div.textContent = `> ${logs[i]}`;
+                terminal.appendChild(div);
+                i++;
+                setTimeout(showLogs, 120);
+            } else {
+                setTimeout(() => {
+                    terminal.style.display = 'none';
+                    document.getElementById('password-gate').style.display = 'flex';
+                    document.getElementById('pass-input').focus();
+                }, 500);
+            }
+        }
+
+        const passInput = document.getElementById('pass-input');
+        passInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                if (passInput.value.toLowerCase() === 'bloodline') {
+                    document.getElementById('visual-effects').style.display = 'none';
+                    document.getElementById('password-gate').style.display = 'none';
+                    document.getElementById('main-app').style.display = 'flex';
+                    loadSection('legacy');
+                } else {
+                    document.getElementById('error-msg').classList.remove('hidden');
+                    passInput.value = '';
+                }
+            }
+        });
+
+        const db = {
+            legacy: {
+                title: "THE MORSEVIC GENESIS",
+                subtitle: "Classified Historical Documentation",
+                stamp: "TOP SECRET",
+                body: `<p class="mb-4">Since 1920, the Morsevic name has resided at the center of extreme human biological evolution research.</p>
+                <p class="mb-4">Following the 2024 Laboratory Incident, research data was fragmented into four primary factions now competing for control over 'The Bloodline' pathogen.</p>
+                <div class="mt-8 p-5 border border-black/20 bg-black/5 font-mono text-[11px] leading-relaxed">
+                    <p class="font-bold underline mb-3 uppercase tracking-wider">DATA DIRECTORY:</p>
+                    <p>• B.F.I: Federal Containment & Biological Purge.</p>
+                    <p>• H.E.E: Human Entity Experiment Results.</p>
+                    <p>• C.O.R.E: Corporate Architects & Logistics.</p>
+                    <p>• S.I.N: Shadow Intelligence & Insurgency.</p>
+                </div>`
+            },
+            bfi: {
+                title: "B.F.I.",
+                subtitle: "Bureau of Federal Investigation",
+                stamp: "AUTHORIZED",
+                desc: "Federal containment units tasked with the neutralization of biological assets.",
+                members: [
+                    { name: "Elowen Vaire", nick: "Valkyrie", role: "Field Director", bio: "Former military intelligence commander. Currently leading the purge of S.I.N. cells.", note: "Priority Alpha. Her orders are absolute." },
+                    { name: "Noa Fern", nick: "Sledge", role: "Tactical Specialist", bio: "Physical breach expert. Only survivor of the Sector-7 reactor meltdown.", note: "Exhibits abnormally high pain tolerance." },
+                    { name: "Christabel Gwyneth", nick: "Oracle", role: "Intel Analyst", bio: "Shadow network decryption expert. Monitors faction movements in real-time.", note: "Critical asset for locating S.I.N. high command." },
+                    { name: "Abiorne Salnoure", nick: "Ranger", role: "Elite Sniper", bio: "Long-range deterrent. Confirmed 50+ eliminations of bio-anomalies.", note: "Operates exclusively in absolute silence." },
+                    { name: "Nilover Aster", nick: "Rookie", role: "Field Agent", bio: "The youngest recruit in history. Natural aptitude for biological tracking.", note: "Under strict observation. High potential." }
+                ]
+            },
+            hee: {
+                title: "H.E.E.",
+                subtitle: "Human Entity Experiment",
+                stamp: "SUBJECTS",
+                desc: "Human subjects who have survived the 'V-Series' mutation process.",
+                members: [
+                    { name: "Maivelyn Lune", nick: "Phase-Zero", role: "Lead Subject", bio: "The first subject to integrate the virus while maintaining full consciousness.", note: "Requires neurological monitoring every 12 hours." },
+                    { name: "Estheric Lürn", nick: "Sentinel", role: "Defender", bio: "Exhibits chitinous skin hardening. Serves as biological heavy armor.", note: "Highly effective as a front-line kinetic shield." },
+                    { name: "Mayla Lilou", nick: "Siren", role: "Sonic Unit", bio: "Vocal cord mutations allow for offensive manipulation of sonic waves.", note: "Can incapacitate targets within a 20-meter radius." },
+                    { name: "Nala Eulalie", nick: "Specter", role: "Infiltrator", bio: "Capable of active camouflage through instant skin pigment manipulation.", note: "Nearly impossible to detect without thermal imaging." }
+                ]
+            },
+            core: {
+                title: "C.O.R.E.",
+                subtitle: "Central Ops & Research Executive",
+                stamp: "BOARD",
+                desc: "Executive board controlling global funding and research logistics.",
+                members: [
+                    { name: "Kenny Harris", img: "img/architect.png", nick: "Architect", role: "CEO", bio: "The mind behind modern research. Possesses original Morsevic pure-data.", note: "Location unknown. Communicates via encrypted proxy only." },
+                    { name: "Caleb Dominic", nick: "Quartermaster", role: "Logistics Chief", bio: "Manages the global distribution of serum and weaponry.", note: "Has knowledge of every black-market route in the hemisphere." },
+                    { name: "Eliana Aisnith", nick: "Legal Counsel", role: "The Fixer", bio: "Handles international treaty violations and corporate sanitization.", note: "Expert in mass-media manipulation." },
+                    { name: "Issa Meryche", nick: "Science Lead", role: "Director of R&D", bio: "Oversees the current H.E.E. generation modification programs.", note: "Ambitious. Disregards all ethical boundaries." }
+                ]
+            },
+            sin: {
+                title: "S.I.N.",
+                subtitle: "Shadow Intelligence Network",
+                stamp: "TERMINATE",
+                desc: "Rogue network seeking total global biological chaos.",
+                members: [
+                    { name: "Renée Corven", nick: "Matriarch", role: "High Command", bio: "Direct descendant of the Morsevic family who chose the shadow path.", note: "Primary termination target for the B.F.I." },
+                    { name: "Kansa Lalita", nick: "Blade", role: "Assassin", bio: "Specialist in silent executions and high-speed close quarters combat.", note: "Extremely agile. Avoid physical contact at all costs." },
+                    { name: "Méisy Blythe", nick: "Viper", role: "Bio-Terrorist", bio: "Developer of airborne chemical toxins based on the Bloodline virus.", note: "No known antidote. Wear Class-A protection." },
+                    { name: "Wyssie Rou", nick: "Mimic", role: "Identity Thief", bio: "Capable of high-precision facial and identity duplication.", note: "Could be anyone, anywhere. Verify identity via blood test." }
+                ]
+            }
+        };
+
+        function loadSection(id) {
+            const screen = document.getElementById('content-screen');
+            const data = db[id];
+            
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`btn-${id}`).classList.add('active');
+
+            screen.style.opacity = 0;
+            setTimeout(() => {
+                let html = `
+                    <div class="mb-10 border-b-2 border-black/10 pb-5">
+                        <div class="stamp">${data.stamp} ACCESS</div>
+                        <h2 class="text-4xl font-bold uppercase tracking-tight">${data.title}</h2>
+                        <h3 class="text-xs text-gray-500 font-mono mt-1 italic">${data.subtitle}</h3>
+                    </div>
+                `;
+
+                if (id === 'legacy') {
+                    html += data.body;
+                } else {
+                    html += `<p class="text-[11px] mb-8 border-l-4 border-red-800 pl-4 py-1 uppercase opacity-70">${data.desc}</p>`;
+                    html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">`;
+                    data.members.forEach((m, idx) => {
+                        // Menentukan path gambar: prioritaskan properti .img, kalau tidak ada pakai nickname
+                        const imgPath = m.img ? m.img : `img/${m.nick.toLowerCase()}.png`;
+                        
+                        html += `
+                            <div class="member-card" onclick="openProfile('${id}', ${idx})">
+                                <div class="w-10 h-14 bg-gray-200 shrink-0 flex items-center justify-center overflow-hidden border border-black/10">
+                                    <img src="${imgPath}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='👤'">
+                                </div>
+                                <div class="overflow-hidden">
+                                    <div class="text-red-900 font-bold text-sm uppercase truncate">${m.name}</div>
+                                    <div class="text-[10px] bg-black/80 text-white inline-block px-1.5 mt-1">"${m.nick}"</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                }
+                screen.innerHTML = html;
+                screen.style.opacity = 1;
+            }, 200);
+        }
+
+        function openProfile(faksi, idx) {
+            const m = db[faksi].members[idx];
+            const modal = document.getElementById('profile-modal');
+            const content = document.getElementById('modal-content');
+            const imgPath = m.img ? m.img : `img/${m.nick.toLowerCase()}.png`;
+
+            content.innerHTML = `
+                <div class="stamp mb-5">${db[faksi].stamp} // RECORD_ID_${idx + 400}</div>
+                <div class="flex flex-col gap-8">
+                    <div class="text-center">
+                        <div class="w-28 h-36 bg-gray-300 mx-auto border-2 border-white shadow-md overflow-hidden flex items-center justify-center mb-5">
+                            <img src="${imgPath}" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<span class=\'opacity-10 text-3xl\'>👤</span>'">
+                        </div>
+                        <h2 class="text-3xl font-bold font-sans">${m.name}</h2>
+                        <div class="bg-red-900 text-white px-4 py-1 inline-block mt-2 font-mono text-xs font-bold uppercase tracking-widest">"${m.nick}"</div>
+                    </div>
+                    <div class="space-y-5 text-sm">
+                        <div class="border-t border-black/10 pt-4">
+                            <span class="font-bold underline block text-[10px] uppercase text-gray-500 mb-1">Operational Status:</span>
+                            <span class="font-bold uppercase">${m.role}</span>
+                        </div>
+                        <div>
+                            <span class="font-bold underline block text-[10px] uppercase text-gray-500 mb-1">Intelligence Bio:</span>
+                            <p class="leading-relaxed text-xs font-sans text-gray-800">${m.bio}</p>
+                        </div>
+                        <div class="bg-red-800/10 p-5 border-l-4 border-red-800 font-mono text-[11px] italic">
+                            <span class="font-bold text-red-800 block not-italic mb-2 underline">COMMANDER'S FIELD NOTES:</span>
+                            "${m.note}"
+                        </div>
+                    </div>
+                </div>
+            `;
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('profile-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        window.onload = showLogs;
+    </script>
+</body>
+</html>
